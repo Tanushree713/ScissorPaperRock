@@ -1,6 +1,6 @@
-import Icon from './Icon';
-import React  ,{useState}from 'react' ;
+import React, { useEffect, useState } from 'react';
 import './App.css';
+import Icon from './Icon';
 import Emoji from './Emoji';
 
 function getRandomEmoji() {
@@ -9,68 +9,81 @@ function getRandomEmoji() {
 }
 
 function determineWinner(emojiX, emojiY) {
-  switch (emojiX) {
-    case "✌":
-      switch (emojiY) {
-        case "🖐":
-          return "PlayerX";
-        case "✊":
-          return "PlayerY";
-        default:
-          return "Draw";
-      }
-    case "🖐":
-      switch (emojiY) {
-        case "✌":
-          return "Playery";
-        case "✊":
-          return "PlayerX";
-        default:
-          return "Draw";
-      }
-    case "✊":
-      switch (emojiY) {
-        case "🖐":
-          return "PlayerY";
-        case "✌":
-          return "PlayerX";
-        default:
-          return "Draw";
-      }
-    default:
-      return "Draw";
+  if (emojiX === emojiY) {
+    return 'Draw';
   }
+  if (
+    (emojiX === '✌' && emojiY === '🖐') ||
+    (emojiX === '🖐' && emojiY === '✊') ||
+    (emojiX === '✊' && emojiY === '✌')
+  ) {
+    return 'PlayerX';
+  }
+  return 'PlayerY';
 }
 
 function App() {
-  const [emojiX, setEmojiX] = useState(Emoji[0]);
-  const [emojiY, setEmojiY] = useState(Emoji[0]);
+  const [emojiX, setEmojiX] = useState(null);
+  const [emojiY, setEmojiY] = useState(null);
   const [pointsX, setPointsX] = useState(0);
   const [pointsY, setPointsY] = useState(0);
-  const [winEmoji, setWinEmoji] = useState("Draw");
+  const [winEmoji, setWinEmoji] = useState('Draw');
+
+  const possibleMovesX = ['✌', '🖐', '✊'];
+  const [selectedMoveX, setSelectedMoveX] = useState(null);
+
+
+
+  useEffect(() => {
+     
+   const storedLocalPointsX = localStorage.getItem('pointsX') ;
+   const storedLocalPointsY = localStorage.getItem('pointsY') ;
+
+    if(storedLocalPointsX){
+      setPointsX(parseInt(storedLocalPointsX ,10))
+    }
+    if(storedLocalPointsY){
+      setPointsY(parseInt(storedLocalPointsY, 10));
+    }  
+   
+  } , [])
+
+  function handleMoveSelection(e) {
+    setSelectedMoveX(e.target.value);
+  }
 
   function handleButtonClick() {
-    const newEmojiX = getRandomEmoji();
-    const newEmojiY = getRandomEmoji();
-    setEmojiX(newEmojiX);
-    setEmojiY(newEmojiY);
+    if (selectedMoveX) {
+      const newEmojiY = getRandomEmoji();
+      setEmojiX(selectedMoveX);
+      setEmojiY(newEmojiY);
 
-    // Calculate the winner using the determineWinner function
-    const winner = determineWinner(newEmojiX, newEmojiY);
-    setWinEmoji(winner);
+      const winner = determineWinner(selectedMoveX, newEmojiY);
+      setWinEmoji(winner);
 
-    if (winner === "PlayerX") {
-      setPointsX(pointsX + 1);
-    } else if (winner === "PlayerY") {
-      setPointsY(pointsY + 1);
+      if (winner === 'PlayerX') {
+        setPointsX(pointsX + 1);
+        localStorage.setItem('pointsX' , pointsX+1);
+
+      } 
+      else if (winner === 'PlayerY') {
+        setPointsY(pointsY + 1);
+        localStorage.setItem('pointsY' , pointsY+1) ;
+
+      }
+      
+      
+     
+    
     }
   }
+
   return (
     <>
       <div className="App">
         <h1>
-          🎰🎰 Welcome to the Game{" "}
-          <span style={{ fontWeight: "bold", color: "#E9B824" }}>
+          🎰🎰 Welcome to the Game{' '}
+          <span style={{ fontWeight: 'bold', color: '#E9B824' }}>
             ScissorPaperRock
           </span>
           🎰🎰
@@ -78,21 +91,47 @@ function App() {
         <div className="Slot">
           <Icon x={emojiX} y={emojiY} pointsX={pointsX} pointsY={pointsY} winEmoji={winEmoji} />
         </div>
-        <button
-          onClick={handleButtonClick}
-          style={{
-            padding: "6px 20px",
-            fontWeight: "bold",
-            borderRadius: "12px",
-            cursor: "pointer",
-          }}
-        >
-          Onclick
-        </button>
+        <div>
+          <select
+            value={selectedMoveX}
+            onChange={handleMoveSelection}
+            style={{
+              fontSize: "20px",
+              margin:"6px",
+              cursor:"pointer"
+            }}
+          >
+            <option value="" 
+            disabled>
+              Select a move
+            </option>
+            {possibleMovesX.map((move) => (
+              <option 
+              key={move} 
+              value={move}
+              style={{
+                cursor: 'pointer',
+                fontSize:"18px"
+              }}>
+                {move}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleButtonClick}
+            style={{
+              padding: '6px 20px',
+              fontWeight: 'bold',
+              borderRadius: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            Play
+          </button>
+        </div>
       </div>
     </>
   );
 }
-
 
 export default App;
